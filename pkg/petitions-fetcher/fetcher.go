@@ -46,45 +46,49 @@ func New(baseURL string, interval time.Duration, logger *logrus.Logger) Fetcher 
 	return f
 }
 
+func (f *fetcher) fetch() {
+	start := time.Now()
+
+	f.logger.Info("fetch-list")
+	petitions, err := f.client.List()
+
+	if err != nil {
+		f.logger.Error(err)
+		FetcherErrorsTotalMetric.With(
+			prometheus.Labels{"url": f.baseURL},
+		).Inc()
+	} else {
+		for _, petition := range petitions {
+			SignaturesTotalMetric.With(prometheus.Labels{
+				"url":          f.baseURL,
+				"petition_url": petition.URL(),
+				"id":           fmt.Sprintf("%d", petition.ID()),
+				"action":       petition.Action(),
+				"opened_at":    petition.OpenedAt().Format(time.RFC3339),
+			}).Set(float64(petition.SignatureCount()))
+		}
+	}
+
+	delta := time.Now().Sub(start)
+	FetcherFetchesMetric.With(
+		prometheus.Labels{"url": f.baseURL},
+	).Observe(delta.Seconds())
+}
+
 func (f *fetcher) Start() {
 	f.wg.Add(1)
 
 	go func() {
+		f.fetch()
+
 		for {
 			f.logger.Info("fetch-loop")
-			start := time.Now()
-
 			select {
 			case <-f.stop:
 				f.logger.Info("fetch-stop")
 				break // from select
 			case <-time.After(f.interval):
-				f.logger.Info("fetch-list")
-				petitions, err := f.client.List()
-
-				if err != nil {
-					f.logger.Error(err)
-					FetcherErrorsTotalMetric.With(
-						prometheus.Labels{"url": f.baseURL},
-					).Inc()
-				} else {
-					for _, petition := range petitions {
-						f.logger.Info(petition)
-						SignaturesTotalMetric.With(prometheus.Labels{
-							"url":          f.baseURL,
-							"petition_url": petition.URL(),
-							"id":           fmt.Sprintf("%d", petition.ID()),
-							"action":       petition.Action(),
-							"opened_at":    petition.OpenedAt().Format(time.RFC3339),
-						}).Set(float64(petition.SignatureCount()))
-					}
-				}
-
-				delta := time.Now().Sub(start)
-				FetcherFetchesMetric.With(
-					prometheus.Labels{"url": f.baseURL},
-				).Observe(delta.Seconds())
-
+				f.fetch()
 				continue // next loop iteration
 			}
 
