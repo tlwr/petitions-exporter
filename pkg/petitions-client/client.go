@@ -15,6 +15,7 @@ type Petition interface {
 	Action() string
 	SignatureCount() int64
 	OpenedAt() time.Time
+	URL() string
 }
 
 type petition struct {
@@ -22,6 +23,7 @@ type petition struct {
 	action         string
 	signatureCount int64
 	openedAt       time.Time
+	url            string
 }
 
 type Client interface {
@@ -67,6 +69,7 @@ func (p *petition) ID() int64             { return p.id }
 func (p *petition) Action() string        { return p.action }
 func (p *petition) OpenedAt() time.Time   { return p.openedAt }
 func (p *petition) SignatureCount() int64 { return p.signatureCount }
+func (p *petition) URL() string           { return p.url }
 
 func (c *client) List() ([]Petition, error) {
 	petitions := []Petition{}
@@ -124,6 +127,7 @@ func (c *client) List() ([]Petition, error) {
 				action:         p.Attributes.Action,
 				signatureCount: p.Attributes.SignatureCount,
 				openedAt:       p.Attributes.OpenedAt,
+				url:            fmt.Sprintf("%s/petitions/%d", c.baseURL, p.ID),
 			})
 		}
 	}
