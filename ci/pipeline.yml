@@ -44,12 +44,42 @@ jobs:
       - set_pipeline: petitions-exporter
         file: petitions-exporter-src/ci/pipeline.yml
 
-  - name: build
+  - name: test
     serial: true
     public: true
     plan:
       - get: petitions-exporter-src
         passed: [set-pipeline]
+        trigger: true
+
+      - task: test
+        privileged: true
+        config:
+          platform: linux
+
+          image_resource:
+            type: registry-image
+            source:
+              repository: golang
+
+          inputs:
+            - name: petitions-exporter-src
+              path: .
+
+          run:
+            path: go
+            args:
+              - test
+              - -v
+              - ./...
+              - -ginkgo.v
+
+  - name: build
+    serial: true
+    public: true
+    plan:
+      - get: petitions-exporter-src
+        passed: [test]
         trigger: true
 
       - get: golang-img-tag
