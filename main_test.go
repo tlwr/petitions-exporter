@@ -119,8 +119,8 @@ var _ = Describe("Exporter", func() {
 		Expect(err).NotTo(HaveOccurred())
 		resp.Body.Close()
 
-		Expect(string(body)).To(ContainSubstring(fmt.Sprintf(
-			`petitions_signatures{action="change a thing",id="3",opened_at="2020-07-04T13:40:09Z",petition_url="%s/petitions/3",url="%s"} 789`,
+		Expect(string(body)).To(MatchRegexp(fmt.Sprintf(
+			`petitions_signatures{action="change a thing",id="3",opened_at="[^"]*",petition_url="%s/petitions/3",url="%s"} 789`,
 			server.URL(),
 			server.URL(),
 		)))
