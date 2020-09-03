@@ -116,5 +116,6 @@ jobs:
       - put: petitions-exporter-img
         params:
           image: image/image.tar
+          additional_tags: petitions-exporter-src/.git/ref
         get_params:
           skip_download: true
