@@ -3,7 +3,7 @@ module github.com/tlwr/petitions-exporter
 go 1.14
 
 require (
-	github.com/meatballhat/negroni-logrus v1.1.0
+	github.com/meatballhat/negroni-logrus v1.1.1
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.3
 	github.com/phyber/negroni-gzip v0.0.0-20180113114010-ef6356a5d029
